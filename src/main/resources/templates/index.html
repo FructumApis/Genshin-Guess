@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>原神猜猜乐</title>
+    <!-- 引入bootstrap 的 css 文件 -->
+    <link rel="stylesheet" href="./lib/bootstrap/css/bootstrap.css">
+    <!-- 引入 layui 的 css 文件 -->
+    <link rel="stylesheet" href="./lib/layui/css/layui.css">
+    <!-- 引入 pintuer 的 css 文件 -->
+    <link rel="stylesheet" href="./lib/pintuer-2.0/pintuer-2.0.custom.css">
+    <!-- 引入 jquery 库 -->
+    <script src="./lib/jquery/jquery-3.5.1.js"></script>
+    <!-- 引入 pintuer 库 -->
+    <script src="./lib/pintuer-2.0/pintuer-2.0.min.js"></script>
+    <!-- 引入 bootstrap 库 -->
+    <script src="./lib/bootstrap/js/bootstrap.js"></script>
+    <!-- 引入 layui 库 -->
+    <script src="./lib/layui/layui.js"></script>
+</head>
+<body class="bg-black">
+<div class="titlePanel align-center line-big size-big container">
+    <!-- 标题栏 -->
+    <div class="h1 weight-big margin-top-large">原神猜猜乐</div>
+    <div class="weight">这是一个基于原神的wordle-like小游戏</div>
+    <div class="weight">该游戏的灵感来源于 <a href="http://zh.akg.saki.cc/" th:text="干员猜猜乐" class="text-sub">此网页</a></div>
+    <div class="weight">你有<span id="count">6</span>/6次机会猜测这个角色,来试一试吧</div>
+    <!-- 标题栏结束 -->
+
+    <!-- 功能栏 -->
+    <div></div>
+    <!-- 功能栏结束 -->
+
+    <!-- 猜测结果表 -->
+    <div class="table-auto padding-top">
+        <table id="guess-table" class="table table-none table-small text-white">
+            <tr id="guess-th" hidden="hidden">
+                <th>稀有度</th>
+                <th>武器</th>
+                <th>元素</th>
+                <th>性别</th>
+                <th>国家</th>
+                <th>名称</th>
+            </tr>
+        </table>
+    </div>
+    <!-- 结果表结束 -->
+
+    <!-- 功能区 -->
+    <div>
+        <!-- 猜测进行时 -->
+        <div id="guessing">
+            <!-- 猜测框 -->
+            <form class="form form-inline" id="guess-form">
+                <div class="input-group">
+                    <input id="guess-input"
+                           name="guess-input"
+                           type="text"
+                           placeholder="请输入您的猜测"
+                           class="input input-big width-mini">
+                </div>
+                <div class="form-button">
+                    <button type="submit" class="button input-big" onclick="return guess()">提交</button>
+                </div>
+            </form><br>
+            <!-- 猜测框结束 -->
+
+            <!-- 求助按钮 -->
+            <button id="guess-help"
+                    class="button bg-deep input-big margin-top-big radius-big"
+                    hidden="hidden"
+                    onclick="help()">
+                问一问派蒙!
+            </button>
+            <!-- 求助按钮结束 -->
+        </div>
+        <!-- 猜测进行时结束 -->
+
+        <!-- 猜测完毕 -->
+        <div id="guess-end" style="display: none">
+            <!-- 猜测成功 -->
+            <div id="guess-success" style="display: none">
+                成功啦！这个神秘的角色正是
+                <a href="javaScript:void(0)" class="text-sub" onclick="showCharacter(this)">
+                    [[${session.character.getName}]]
+                </a>
+            </div>
+            <!-- 猜测成功结束 -->
+
+            <!-- 猜测失败 -->
+            <div id="guess-failure" style="display: none">
+                失败了！这个神秘的角色是
+                <a href="javaScript:void(0)" class="text-sub" onclick="showCharacter(this)">
+                    [[${session.character.name}]]
+                </a>
+            </div>
+            <!-- 猜测失败结束 -->
+
+            <!-- 再来一局 -->
+            <a id="guess-again"
+               class="button bg-deep input-big margin-top-big radius-big"
+               th:href="@{/}"
+               th:value="再来一局">
+                再来一局
+            </a>
+        </div>
+        <!-- 完毕结束 -->
+    </div>
+    <!-- 功能区结束 -->
+
+    <!-- 角色信息弹窗 -->
+    <div class="dialog container" id="character-dialog">
+        <div class="dialog-body dialog-content bg-dark">
+            <div class="dialog-title">角色信息</div>
+            <div class="dialog-text">无</div>
+        </div>
+    </div>
+    <!-- 角色信息弹窗结束 -->
+
+    <div>
+        <button onclick="getAll()">测试</button>
+        <button onclick="t()">text</button>
+    </div>
+
+</div>
+</body>
+
+<!-- 引入自定义js库 -->
+<script src="./js/guess.js"></script>
+
+<script>
+    // 页面初始化时获取数据
+    window.onload = function() {
+        // let daima = localStorage.getItem("name");
+        //
+        // if(daima != null && daima != "") {
+        //     $("#qipan").append(daima);
+        // }
+        console.log($("#count").html())
+    };
+
+    // 存储相关数据
+    window.onbeforeunload = function() {
+        // 当前尝试次数
+        localStorage.setItem("count", $("#count").html());
+        // 当前猜测角色列表
+    }
+
+    var da = [];
+
+    function getAll() {
+
+        $.ajax({
+            url: '/character/getAll',
+            method: 'POST',
+            data: {name: name},
+            dataType: 'json',
+            async: false,
+            success:function(data) {
+                for (var i = 0; i < data.length; i++) {
+                    da.push(data[i]);
+                }
+            }
+        })
+
+    }
+
+    function t() {
+        console.log(da);
+        console.log(Array.isArray(da))
+        $.ajax({
+            url: '/character/test',
+            method: 'POST',
+            async: false,
+            data: {list: da},
+            dataType: 'json',
+        })
+    }
+</script>
+</html>
